@@ -13,6 +13,9 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = "World"
 	}
+	// Set content-type explicitly though ResponseWriter.Write detects it automatically.
+	// https://golang.org/pkg/net/http/#ResponseWriter
+	w.Header().Add("Content-Type", "text/plain")
 	io.WriteString(w, mylib.GetHelloMessage(name))
 }
 

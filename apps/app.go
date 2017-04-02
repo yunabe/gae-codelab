@@ -26,4 +26,6 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 func init() {
 	http.HandleFunc("/hello", helloHandler)
 	http.HandleFunc("/", defaultHandler)
+	http.HandleFunc("/register_sample_task", registerSampleTask)
+	http.HandleFunc("/admin/sample_task", handleSampleTask)
 }

@@ -1,0 +1,4 @@
+cron:
+- description: hourly sample cron job
+  url: /admin/cron_task
+  schedule: every 1 hours

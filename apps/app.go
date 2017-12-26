@@ -5,6 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/yunabe/gae-codelab/mylib"
 	"google.golang.org/appengine"
@@ -20,6 +22,19 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	// https://golang.org/pkg/net/http/#ResponseWriter
 	w.Header().Add("Content-Type", "text/plain")
 	io.WriteString(w, mylib.GetHelloMessage(name))
+}
+
+func helloSlow(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	secStr := r.FormValue("sec")
+	sec, err := strconv.ParseInt(secStr, 0, 64)
+	if err != nil {
+		log.Infof(ctx, "Failed to parse %q: %v", secStr, err)
+		sec = 5
+	}
+	time.Sleep(time.Duration(sec) * time.Second)
+	w.Header().Add("Content-Type", "text/plain")
+	fmt.Fprintf(w, "Waited for %d secs", sec)
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +67,7 @@ func handleCronTask(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/slow", helloSlow)
 	http.HandleFunc("/", defaultHandler)
 	http.HandleFunc("/register_sample_task", registerSampleTask)
 	http.HandleFunc("/admin/sample_task", handleSampleTask)

@@ -1,13 +1,17 @@
 package apps
 
 import (
+	crand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
+	mrand "math/rand"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/yunabe/gae-codelab/datastore"
 	"github.com/yunabe/gae-codelab/mylib"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -35,6 +39,36 @@ func helloSlow(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(time.Duration(sec) * time.Second)
 	w.Header().Add("Content-Type", "text/plain")
 	fmt.Fprintf(w, "Waited for %d secs", sec)
+}
+
+type mathRandReader struct{}
+
+func (mathRandReader) Read(p []byte) (int, error) {
+	return mrand.Read(p)
+}
+
+func mathRandHandler(w http.ResponseWriter, r *http.Request) {
+	// math/rand.Read is deterministic. This handler returns the same value
+	// (52fdfc072182654f163f5f0f9a621d729566c74d10037c4d7bbb0407d1e2c649) after reload.
+	buf := make([]byte, 32)
+	_, err := io.ReadFull(mathRandReader{}, buf)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", "text/plain")
+	io.WriteString(w, hex.EncodeToString(buf))
+}
+
+func cryptoRandHandler(w http.ResponseWriter, r *http.Request) {
+	buf := make([]byte, 32)
+	_, err := io.ReadFull(crand.Reader, buf)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", "text/plain")
+	io.WriteString(w, hex.EncodeToString(buf))
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +100,10 @@ func handleCronTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	datastore.RegisterHandlers()
 	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/mrand", mathRandHandler)
+	http.HandleFunc("/crand", cryptoRandHandler)
 	http.HandleFunc("/slow", helloSlow)
 	http.HandleFunc("/", defaultHandler)
 	http.HandleFunc("/register_sample_task", registerSampleTask)

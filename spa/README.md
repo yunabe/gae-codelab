@@ -1,3 +1,14 @@
+## Notes for GAE
+- To deploy this project to GAE, run `npm run deploy`.
+- Demo: https://spa-dot-yunabe-codelab.appspot.com/
+- create-react-app enables service-worker.
+- In app.yaml, we set expiration: 0s for service-worker script so that service-worker is reloaed every navigation.
+- service-worker script by create-react-app fetches `index.html` with cache-breaker param.
+  So, `index.html` is always reloaded when service-worker is reloaded though app.yaml sets `expiration: 1h` for `index.html`.
+- service-worker traps all "navigation" under `/`.
+
+# README.md by create-react-app
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>

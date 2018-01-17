@@ -1,0 +1,25 @@
+runtime: go
+api_version: go1
+
+service: spa
+handlers:
+- url: /api/.*
+  script: _go_app
+- url: /
+  static_files: build/index.html
+  upload: build/index.html
+- url: /service-worker.js
+  static_files: build/service-worker.js
+  upload: build/service-worker.js
+  expiration: "0s"
+- url: /
+  static_dir: build
+  expiration: "1h"
+
+skip_files:
+  - node_modules/*
+  - src/*
+  - public/*
+  - package.json
+  - package-lock.json
+  - README.md

@@ -3,9 +3,13 @@
 - Demo: https://spa-dot-yunabe-codelab.appspot.com/
 - create-react-app enables service-worker.
 - In app.yaml, we set expiration: 0s for service-worker script so that service-worker is reloaed every navigation.
-- service-worker script by create-react-app fetches `index.html` with cache-breaker param.
+- service-worker script by create-react-app fetches `index.html` with [cache-breaker param](https://github.com/GoogleChromeLabs/sw-precache#dontcachebusturlsmatching-regex).
   So, `index.html` is always reloaded when service-worker is reloaded though app.yaml sets `expiration: 1h` for `index.html`.
 - service-worker traps all "navigation" under `/`.
+  - [Request.mode == "navigate"](https://developer.mozilla.org/en-US/docs/Web/API/Request/mode)
+  - You can not check the response of `/api/...` by opening the URLs from browsers.
+  - But you can send XHR to `/api/...` because the service worker does not trap non-navigational requests.
+- "0s", "10h" are set for demo. Please set real values based on the requirement of your product.
 
 # README.md by create-react-app
 

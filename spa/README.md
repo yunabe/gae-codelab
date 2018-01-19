@@ -9,7 +9,9 @@
   - [Request.mode == "navigate"](https://developer.mozilla.org/en-US/docs/Web/API/Request/mode)
   - You can not check the response of `/api/...` by opening the URLs from browsers.
   - But you can send XHR to `/api/...` because the service worker does not trap non-navigational requests.
-- "0s", "10h" are set for demo. Please set real values based on the requirement of your product.
+- "1s", "1h" and "10h" are set for demo. Please set real values based on the requirement of your product.
+- Do not use "0s" for expiration.
+  - https://issuetracker.google.com/issues/38485744
 
 # README.md by create-react-app
 

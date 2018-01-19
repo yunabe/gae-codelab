@@ -12,7 +12,7 @@ handlers:
 - url: /service-worker.js
   static_files: build/service-worker.js
   upload: build/service-worker.js
-  expiration: "0s"
+  expiration: "1s"
 - url: /
   static_dir: build
   expiration: "10h"

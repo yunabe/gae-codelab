@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/rpc/v2"
+	"github.com/gorilla/rpc/v2/json2"
 	"github.com/yunabe/gae-codelab/datastore"
 	"github.com/yunabe/gae-codelab/mylib"
 	"google.golang.org/appengine"
@@ -24,8 +26,32 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Set content-type explicitly though ResponseWriter.Write detects it automatically.
 	// https://golang.org/pkg/net/http/#ResponseWriter
-	w.Header().Add("Content-Type", "text/plain")
+	w.Header().Add("Content-Type", "text/text")
 	io.WriteString(w, mylib.GetHelloMessage(name))
+}
+
+func helloJSONRPCHandler(w http.ResponseWriter, r *http.Request) {
+	// Set content-type explicitly though ResponseWriter.Write detects it automatically.
+	// https://golang.org/pkg/net/http/#ResponseWriter
+	w.Header().Add("Content-Type", "text/html")
+	io.WriteString(w, `<!doctype html>
+<html>
+  <body>
+    <div id="message"></div>
+    <script>
+      fetch("/gorilla_jsonrpc", {
+        method: "POST",
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: '{"jsonrpc": "2.0", "method": "GorillaRPCService.Hello", "params": {"name": "yunabe"}, "id": "1"}'
+      }).then(r=>{return r.json();}).then(j=>{
+        document.getElementById('message').textContent = j.result.message;
+      })
+    </script>
+  </body>
+</html>
+`)
 }
 
 func helloSlow(w http.ResponseWriter, r *http.Request) {
@@ -99,9 +125,35 @@ func handleCronTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
+type (
+	GorillaRPCService struct{}
+	HelloArgs         struct {
+		Name string `json:"name"`
+	}
+	HelloReply struct {
+		Message string `json:"message"`
+	}
+)
+
+func (*GorillaRPCService) Hello(r *http.Request, args *HelloArgs, reply *HelloReply) error {
+	if args.Name == "" {
+		return fmt.Errorf("name must not be empty")
+	}
+	reply.Message = fmt.Sprintf("Hello %s", args.Name)
+	return nil
+}
+
+func initJSONRPC() {
+	s := rpc.NewServer()
+	s.RegisterCodec(json2.NewCodec(), "application/json")
+	s.RegisterService(&GorillaRPCService{}, "")
+	http.Handle("/gorilla_jsonrpc", s)
+}
+
 func init() {
 	datastore.RegisterHandlers()
 	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/hellojsonrpc", helloJSONRPCHandler)
 	http.HandleFunc("/mrand", mathRandHandler)
 	http.HandleFunc("/crand", cryptoRandHandler)
 	http.HandleFunc("/slow", helloSlow)
@@ -109,4 +161,6 @@ func init() {
 	http.HandleFunc("/register_sample_task", registerSampleTask)
 	http.HandleFunc("/admin/sample_task", handleSampleTask)
 	http.HandleFunc("/admin/cron_task", handleCronTask)
+
+	initJSONRPC()
 }
